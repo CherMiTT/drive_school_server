@@ -5,6 +5,6 @@ project ("server")
 include(conanbuildinfo.cmake)
 conan_basic_setup()
 
-add_executable (server "main.cpp" "Server.h" "Server.cpp" "RequestHandler.cpp" "RequestHandler.h" "dataBaseHandler.h" "dataBaseHandler.cpp")
+add_executable (server "main.cpp" "Server.h" "Server.cpp" "RequestHandler.cpp" "RequestHandler.h" "dataBaseHandler.h" "dataBaseHandler.cpp" "Session.h" "Session.cpp")
 
 target_link_libraries(server ${CONAN_LIBS})

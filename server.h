@@ -8,6 +8,7 @@
 #include <Poco/Util/ServerApplication.h>
 #include <Poco/Mutex.h>
 
+#include "Session.h"
 using namespace Poco;
 using namespace Poco::Util;
 using namespace std;
@@ -15,13 +16,9 @@ using namespace std;
 class Server : public ServerApplication
 {
 public:
-	static string getText();
-	static void setText(string newText);
+	static std::vector<Session*>* vSessions;
 
-protected:
+private:
 	int main(const vector<string>&);
-
-	static string text;
-	static Mutex textLock;
 
 };

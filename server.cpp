@@ -1,34 +1,17 @@
-#include "Server.h"
+#include "server.h"
 #include "RequestHandler.h"
 #include "dataBaseHandler.h"
 
-string Server::text = "Hello world!";
-Mutex Server::textLock;
+std::vector<Session*>* Server::vSessions = nullptr;
 
-
-string Server::getText()
-{
-	ScopedLock<Mutex> lock(textLock);
-	return text;
-}
-
-void Server::setText(string newText)
-{
-	ScopedLock<Mutex> lock(textLock);
-	text = newText;
-}
 
 int Server::main(const vector<string>&)
 {
 	Poco::Net::HTTPServer s(new RequestHandlerFactory, Poco::Net::ServerSocket(9090), new Poco::Net::HTTPServerParams);
 	s.start();
 	std::cout << endl << "Server started" << std::endl;
+	vSessions = new std::vector<Session*>();
 
-	bool flag = MySQLHandler::createConnection();
-	if (!flag)
-	{
-		std::cout << "Couldn't connect to database!" << std::endl;
-	}
 	waitForTerminationRequest();  // wait for CTRL-C or kill
 
 	std::cout << std::endl << "Shutting down..." << std::endl;
