@@ -11,6 +11,7 @@
 #include <Poco/JSON/Parser.h>
 #include <Poco/JSON/Object.h>
 #include <Poco/Dynamic/Var.h>
+#include <chrono>
 
 #include "dataBaseHandler.h"
 
@@ -23,10 +24,11 @@ public:
 	void handleRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
 	void handleAuthorizationRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
 	void handleProfileInfoRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
+	void handleAddUserRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
 
 private:
 	[[nodiscard]] Poco::JSON::Object::Ptr parseAuthorizationJson(std::string&);
-	[[modiscard]] std::string getRequestString(Poco::Net::HTTPServerRequest&);
+	[[nodiscard]] std::string getRequestString(Poco::Net::HTTPServerRequest&);
 };
 
 

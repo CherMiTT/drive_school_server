@@ -10,9 +10,9 @@
 class Session
 {
 public:
-	int id;
+	int id; //TODO: id into user struct
 	std::string token;
 	std::chrono::time_point<std::chrono::system_clock> createdTime;
-
+	std::string userInfoJsonString; //TODO: store struct, not string
 	Session();
 };
