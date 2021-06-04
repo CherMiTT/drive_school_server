@@ -4,6 +4,7 @@
 #include "Poco/Data/MySQL/Connector.h"
 #include "Poco/Data/MySQL/MySQLException.h"
 #include <mutex>
+#include "Session.h"
 
 //Singleton
 class MySQLHandler
@@ -14,17 +15,19 @@ public:
 	//[[nodiscard]] bool createConnection();
 
 	[[nodiscard]] int getUserID(std::string, std::string);
-	[[nodiscard]] void getProfileInfo(Session*);
+	[[nodiscard]] struct User getUserInfo(Session*);
+
+	void addUser(User newUser, std::string login, std::string password, 
+		std::string phone, std::string email, std::string pass);
 	 
 private:
-	//Poco::Data::Session *session;
 	static MySQLHandler *instance;
 	static std::mutex mutex_;
 
 	MySQLHandler() {}
 };
 
-struct user
+struct User
 {
 	std::string first_name;
 	std::string middle_name;
@@ -32,7 +35,7 @@ struct user
 	std::string role;
 };
 
-struct student
+struct Student
 {
 	unsigned int group_id;
 };

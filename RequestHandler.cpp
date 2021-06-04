@@ -1,6 +1,7 @@
 #include "RequestHandler.h"
 #include "server.h"
 #include "Session.h"
+#include "dataBaseHandler.h"
 
 void RequestHandler::handleRequest(Poco::Net::HTTPServerRequest& req, Poco::Net::HTTPServerResponse& resp)
 {
@@ -12,9 +13,14 @@ void RequestHandler::handleRequest(Poco::Net::HTTPServerRequest& req, Poco::Net:
         handleAuthorizationRequest(req, resp);
         return;
     }
-    if (req.getURI() == "/api/profile-info")
+    if (req.getURI() == "/api/user-info")
     {
         handleProfileInfoRequest(req, resp);
+        return;
+    }
+    if (req.getURI() == "/api/add/user")
+    {
+        handleAddUserRequest(req, resp);
         return;
     }
 
@@ -72,11 +78,16 @@ void RequestHandler::handleAuthorizationRequest(Poco::Net::HTTPServerRequest& re
         cout << s->token << endl;
         Server::vSessions->push_back(s);
         jsonStr = "{ \"status\" : \"success\", \"token\" : \"" + s->token + "\" }";
+
+        struct User user = MySQLHandler::getHandler()->getUserInfo(s);
+        s->userInfoJsonString = "\"first_name\" : \"" + user.first_name + "\", \
+\"middle_name\" : \"" + user.middle_name + "\", \
+\"last_name\" : \"" + user.last_name +"\", \
+\"role\" : \"" + user.role + "\" }";
     }
 
     Poco::JSON::Parser parser;
     Poco::Dynamic::Var result = parser.parse(jsonStr);
-    Poco::JSON::Object::Ptr object = result.extract<Poco::JSON::Object::Ptr>();
     ostream& out = resp.send();
     out << result.toString();
 }
@@ -90,11 +101,13 @@ void RequestHandler::handleProfileInfoRequest(Poco::Net::HTTPServerRequest& req,
     
     std::string token = object->getValue<string>("token");
     int id = -1;
+    std::string userInfo;
     for (auto o : *(Server::vSessions))
     {
         if (o->token.compare(token) == 0)
         {
             id = o->id;
+            userInfo = o->userInfoJsonString;
             break;
         }
     }
@@ -107,9 +120,72 @@ void RequestHandler::handleProfileInfoRequest(Poco::Net::HTTPServerRequest& req,
     }
     else
     {
-        jsonStr = "{ \"status\" : \"success\" }";
-
+        jsonStr = "{ \"status\" : \"success\", ";
+        jsonStr += userInfo;
     }
+
+    Poco::Dynamic::Var result = parser.parse(jsonStr);
+    ostream& out = resp.send();
+    out << result.toString();
+}
+
+void RequestHandler::handleAddUserRequest(Poco::Net::HTTPServerRequest& req, Poco::Net::HTTPServerResponse& resp)
+{
+    //TODO parsing into function
+    Poco::JSON::Parser parser;
+    std::string s = getRequestString(req);
+    Poco::Dynamic::Var json = parser.parse(s);
+    Poco::JSON::Object::Ptr object = json.extract<Poco::JSON::Object::Ptr>();
+
+    std::string token = object->getValue<string>("token");
+    int id = -1;
+    std::string userInfo = "";
+    std::string role = "";
+    for (auto o : *(Server::vSessions))
+    {
+        if (o->token.compare(token) == 0)
+        {
+            id = o->id;
+            userInfo = o->userInfoJsonString;
+            break;
+        }
+    }
+    if (userInfo != "")
+    {
+        Poco::Dynamic::Var info = parser.parse("{" +userInfo);
+        Poco::JSON::Object::Ptr infoJson = info.extract<Poco::JSON::Object::Ptr>();
+        role = infoJson->getValue<string>("role");
+    }
+
+    std::string jsonStr;
+    if (id == -1)
+    {
+        cout << "Invalid token";
+        jsonStr = "{ \"status\" : \"fail\" }";
+    }
+    else if (role != "a")
+    {
+        cout << "Not admin";
+        jsonStr = "{ \"status\" : \"fail\" }";
+    }
+    else
+    {
+        struct User newUser;
+        newUser.first_name = object->getValue<string>("name");
+        newUser.middle_name = object->getValue<string>("middle_name");
+        newUser.last_name = object->getValue<string>("last_name");
+        std::string login = object->getValue<string>("login");
+        std::string password = object->getValue<string>("password");
+        std::string phone = object->getValue<string>("phone_number");
+        std::string email = object->getValue<string>("email");
+        std::string pass = object->getValue<string>("pass");
+        newUser.role = object->getValue<string>("role");
+        jsonStr = "{ \"status\" : \"success\" }";
+        MySQLHandler::getHandler()->addUser(newUser, login, password, phone, email, pass);
+    }
+    Poco::Dynamic::Var result = parser.parse(jsonStr);
+    ostream& out = resp.send();
+    out << result.toString();
 }
 
 Poco::JSON::Object::Ptr RequestHandler::parseAuthorizationJson(string& json)
