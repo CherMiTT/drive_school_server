@@ -15,9 +15,6 @@
 
 #include "dataBaseHandler.h"
 
-//using namespace Poco::Net;
-//using namespace std;
-
 class RequestHandler : public Poco::Net::HTTPRequestHandler
 {
 public:
@@ -25,10 +22,18 @@ public:
 	void handleAuthorizationRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
 	void handleProfileInfoRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
 	void handleAddUserRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
+	void handleAllUsersRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
+	void handleAdminsRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
+	void handleInstructorsRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
+	void handleStudentsRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
+	void handleGroupsRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
+	void handleCarsRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
+	void handleRoomsRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
 
 private:
-	[[nodiscard]] Poco::JSON::Object::Ptr parseAuthorizationJson(std::string&);
+	[[nodiscard]] Poco::JSON::Object::Ptr parseObjectJson(std::string&);
 	[[nodiscard]] std::string getRequestString(Poco::Net::HTTPServerRequest&);
+	[[nodiscard]] bool CheckTokenAndRole(Poco::Net::HTTPServerRequest& req, std::string& jsonStr, std::string& role);
 };
 
 

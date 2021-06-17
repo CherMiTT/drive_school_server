@@ -23,26 +23,47 @@ void RequestHandler::handleRequest(Poco::Net::HTTPServerRequest& req, Poco::Net:
         handleAddUserRequest(req, resp);
         return;
     }
+    if (req.getURI() == "/api/all-users")
+    {
+        handleAllUsersRequest(req, resp);
+        return;
+    }
+    if (req.getURI() == "/api/all-students")
+    {
+        handleStudentsRequest(req, resp);
+        return;
+    }
+    if (req.getURI() == "/api/all-instructors")
+    {
+        handleInstructorsRequest(req, resp);
+        return;
+    }
+    if (req.getURI() == "/api/all-admins")
+    {
+        handleAdminsRequest(req, resp);
+        return;
+    }
+    if (req.getURI() == "/api/all-groups")
+    {
+        handleGroupsRequest(req, resp);
+        return;
+    }
+    if (req.getURI() == "/api/group-list")
+    {
+        handleGroupsRequest(req, resp);
+        return;
+    }
+    if (req.getURI() == "/api/all-cars")
+    {
+        handleCarsRequest(req, resp);
+        return;
+    }
+    if (req.getURI() == "/api/all-rooms")
+    {
+        handleRoomsRequest(req, resp);
+        return;
+    }
 
-    /*auto& stream = req.stream();
-    const size_t len = req.getContentLength();
-    char* buffer = new char[len + 1];
-    memset(buffer, 0, len + 1);
-    stream.read(buffer, len);
-
-    std::string s(buffer);
-    Poco::JSON::Object::Ptr json = parseAuthorizationJson(s);
-    
-    std::string login = json->getValue<string>("login");
-    std::string password = json->getValue<string>("password");
-    std::cout << "login = " << login << std::endl << "password = " << password << std::endl;
-
-    //TODO: Check login and password
-    resp.setStatus(Poco::Net::HTTPResponse::HTTP_OK); //HTTP_OK
-    resp.setContentType("application/json");
-
-    ostream& out = resp.send();
-    out << "Hello, you logged in!";*/
 }
 
 void RequestHandler::handleAuthorizationRequest(Poco::Net::HTTPServerRequest& req, Poco::Net::HTTPServerResponse& resp)
@@ -55,7 +76,7 @@ void RequestHandler::handleAuthorizationRequest(Poco::Net::HTTPServerRequest& re
 
     std::string s(buffer);*/
     std::string s = getRequestString(req);
-    Poco::JSON::Object::Ptr json = parseAuthorizationJson(s);
+    Poco::JSON::Object::Ptr json = parseObjectJson(s);
 
     std::string login = json->getValue<string>("login");
     std::string password = json->getValue<string>("password");
@@ -94,11 +115,8 @@ void RequestHandler::handleAuthorizationRequest(Poco::Net::HTTPServerRequest& re
 
 void RequestHandler::handleProfileInfoRequest(Poco::Net::HTTPServerRequest& req, Poco::Net::HTTPServerResponse& resp)
 {
-    Poco::JSON::Parser parser;
-    std::string s = getRequestString(req);
-    Poco::Dynamic::Var json = parser.parse(s);
-    Poco::JSON::Object::Ptr object = json.extract<Poco::JSON::Object::Ptr>();
-    
+    Poco::JSON::Object::Ptr object = parseObjectJson(getRequestString(req));
+
     std::string token = object->getValue<string>("token");
     int id = -1;
     std::string userInfo;
@@ -124,6 +142,7 @@ void RequestHandler::handleProfileInfoRequest(Poco::Net::HTTPServerRequest& req,
         jsonStr += userInfo;
     }
 
+    Poco::JSON::Parser parser;
     Poco::Dynamic::Var result = parser.parse(jsonStr);
     ostream& out = resp.send();
     out << result.toString();
@@ -132,44 +151,12 @@ void RequestHandler::handleProfileInfoRequest(Poco::Net::HTTPServerRequest& req,
 void RequestHandler::handleAddUserRequest(Poco::Net::HTTPServerRequest& req, Poco::Net::HTTPServerResponse& resp)
 {
     //TODO parsing into function
-    Poco::JSON::Parser parser;
-    std::string s = getRequestString(req);
-    Poco::Dynamic::Var json = parser.parse(s);
-    Poco::JSON::Object::Ptr object = json.extract<Poco::JSON::Object::Ptr>();
-
-    std::string token = object->getValue<string>("token");
-    int id = -1;
-    std::string userInfo = "";
+    std::string jsonStr = "";
     std::string role = "";
-    for (auto o : *(Server::vSessions))
+    if (CheckTokenAndRole(req, jsonStr, role))
     {
-        if (o->token.compare(token) == 0)
-        {
-            id = o->id;
-            userInfo = o->userInfoJsonString;
-            break;
-        }
-    }
-    if (userInfo != "")
-    {
-        Poco::Dynamic::Var info = parser.parse("{" +userInfo);
-        Poco::JSON::Object::Ptr infoJson = info.extract<Poco::JSON::Object::Ptr>();
-        role = infoJson->getValue<string>("role");
-    }
+        Poco::JSON::Object::Ptr object = parseObjectJson(getRequestString(req));
 
-    std::string jsonStr;
-    if (id == -1)
-    {
-        cout << "Invalid token";
-        jsonStr = "{ \"status\" : \"fail\" }";
-    }
-    else if (role != "a")
-    {
-        cout << "Not admin";
-        jsonStr = "{ \"status\" : \"fail\" }";
-    }
-    else
-    {
         struct User newUser;
         newUser.first_name = object->getValue<string>("name");
         newUser.middle_name = object->getValue<string>("middle_name");
@@ -183,16 +170,187 @@ void RequestHandler::handleAddUserRequest(Poco::Net::HTTPServerRequest& req, Poc
         jsonStr = "{ \"status\" : \"success\" }";
         MySQLHandler::getHandler()->addUser(newUser, login, password, phone, email, pass);
     }
+
+    Poco::JSON::Parser parser;
     Poco::Dynamic::Var result = parser.parse(jsonStr);
     ostream& out = resp.send();
     out << result.toString();
 }
 
-Poco::JSON::Object::Ptr RequestHandler::parseAuthorizationJson(string& json)
+void RequestHandler::handleAllUsersRequest(Poco::Net::HTTPServerRequest& req, Poco::Net::HTTPServerResponse& resp)
+{
+    std::string jsonStr = "";
+    std::string role = "";
+    if (CheckTokenAndRole(req, jsonStr, role))
+    {
+        int count;
+        jsonStr = MySQLHandler::getHandler()->getAllUsers(count);
+        if (count == 0) jsonStr = "{ \"status\" : \"success\" }";
+    }
+    std::cout << jsonStr << std::endl;
+
+    Poco::JSON::Parser parser;
+    Poco::Dynamic::Var result = parser.parse(jsonStr);
+    ostream& out = resp.send();
+    out << result.toString();
+
+}
+
+void RequestHandler::handleAdminsRequest(Poco::Net::HTTPServerRequest& req, Poco::Net::HTTPServerResponse& resp)
+{
+    std::string jsonStr = "";
+    std::string role = "";
+    if (CheckTokenAndRole(req, jsonStr, role))
+    {
+        int count = 0;
+        jsonStr = MySQLHandler::getHandler()->getAdmins(count);
+        if (count == 0) jsonStr = "{ \"status\" : \"success\" }";
+    }
+    std::cout << jsonStr << std::endl;
+
+    Poco::JSON::Parser parser;
+    Poco::Dynamic::Var result = parser.parse(jsonStr);
+    ostream& out = resp.send();
+    out << result.toString();
+}
+
+void RequestHandler::handleInstructorsRequest(Poco::Net::HTTPServerRequest& req, Poco::Net::HTTPServerResponse& resp)
+{
+    std::string jsonStr = "";
+    std::string role = "";
+    if (CheckTokenAndRole(req, jsonStr, role))
+    {
+        int count = 0;
+        jsonStr = MySQLHandler::getHandler()->getInstructors(count);
+        if (count == 0) jsonStr = "{ \"status\" : \"success\" }";
+    }
+    std::cout << jsonStr << std::endl;
+
+    Poco::JSON::Parser parser;
+    Poco::Dynamic::Var result = parser.parse(jsonStr);
+    ostream& out = resp.send();
+    out << result.toString();
+}
+
+void RequestHandler::handleStudentsRequest(Poco::Net::HTTPServerRequest& req, Poco::Net::HTTPServerResponse& resp)
+{
+    std::string jsonStr = "";
+    std::string role = "";
+    if (CheckTokenAndRole(req, jsonStr, role))
+    {
+        int count = 0;
+        jsonStr = MySQLHandler::getHandler()->getStudents(count);
+        if (count == 0) jsonStr = "{ \"status\" : \"success\" }";
+    }
+    std::cout << jsonStr << std::endl;
+
+    Poco::JSON::Parser parser;
+    Poco::Dynamic::Var result = parser.parse(jsonStr);
+    ostream& out = resp.send();
+    out << result.toString();
+}
+
+void RequestHandler::handleGroupsRequest(Poco::Net::HTTPServerRequest& req, Poco::Net::HTTPServerResponse& resp)
+{
+    std::string jsonStr = "";
+    std::string role = "";
+    if (CheckTokenAndRole(req, jsonStr, role))
+    {
+        int count = 0;
+        jsonStr = MySQLHandler::getHandler()->getGroups(count);
+        if (count == 0) jsonStr = "{ \"status\" : \"success\" }";
+    }
+    std::cout << jsonStr << std::endl;
+
+    Poco::JSON::Parser parser;
+    Poco::Dynamic::Var result = parser.parse(jsonStr);
+    ostream& out = resp.send();
+    out << result.toString();
+}
+
+void RequestHandler::handleCarsRequest(Poco::Net::HTTPServerRequest& req, Poco::Net::HTTPServerResponse& resp)
+{
+    std::string jsonStr = "";
+    std::string role = "";
+    if (CheckTokenAndRole(req, jsonStr, role))
+    {
+        int count = 0;
+        jsonStr = MySQLHandler::getHandler()->getCars(count);
+        if (count == 0) jsonStr = "{ \"status\" : \"success\" }";
+    }
+    std::cout << jsonStr << std::endl;
+
+    Poco::JSON::Parser parser;
+    Poco::Dynamic::Var result = parser.parse(jsonStr);
+    ostream& out = resp.send();
+    out << result.toString();
+}
+
+void RequestHandler::handleRoomsRequest(Poco::Net::HTTPServerRequest& req, Poco::Net::HTTPServerResponse& resp)
+{
+    std::string jsonStr = "";
+    std::string role = "";
+    if (CheckTokenAndRole(req, jsonStr, role))
+    {
+        int count = 0;
+        jsonStr = MySQLHandler::getHandler()->getRooms(count);
+        if (count == 0) jsonStr = "{ \"status\" : \"success\" }";
+    }
+    std::cout << jsonStr << std::endl;
+    Poco::JSON::Parser parser;
+    Poco::Dynamic::Var result = parser.parse(jsonStr);
+    ostream& out = resp.send();
+    out << result.toString();
+}
+
+bool RequestHandler::CheckTokenAndRole(Poco::Net::HTTPServerRequest& req, std::string& jsonStr, std::string& role)
+{
+    /*Poco::JSON::Parser parser;
+    std::string s = getRequestString(req);
+    Poco::Dynamic::Var json = parser.parse(s);
+    Poco::JSON::Object::Ptr object = json.extract<Poco::JSON::Object::Ptr>();
+    */
+    Poco::JSON::Object::Ptr object = parseObjectJson(getRequestString(req));
+
+    std::string token = object->getValue<string>("token");
+    int id = -1;
+    std::string userInfo = "";
+    for (auto o : *(Server::vSessions))
+    {
+        if (o->token.compare(token) == 0)
+        {
+            id = o->id;
+            userInfo = o->userInfoJsonString;
+            break;
+        }
+    }
+    if (userInfo != "")
+    {
+        Poco::JSON::Parser parser;
+        Poco::Dynamic::Var info = parser.parse("{" + userInfo);
+        Poco::JSON::Object::Ptr infoJson = info.extract<Poco::JSON::Object::Ptr>();
+        role = infoJson->getValue<string>("role");
+    }
+
+    if (id == -1)
+    {
+        cout << "Invalid token";
+        jsonStr = "{ \"status\" : \"fail\" }";
+        return false;
+    }
+    else if (role != "a")
+    {
+        cout << "Not admin";
+        jsonStr = "{ \"status\" : \"fail\" }";
+        return false;
+    }
+    return true;
+}
+
+Poco::JSON::Object::Ptr RequestHandler::parseObjectJson(string& json)
 {
     Poco::JSON::Parser parser;
     Poco::Dynamic::Var result = parser.parse(json);
-    //TODO: check object or an array
     Poco::JSON::Object::Ptr object = result.extract<Poco::JSON::Object::Ptr>();
     return object;
 }

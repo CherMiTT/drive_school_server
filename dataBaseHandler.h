@@ -12,10 +12,16 @@ class MySQLHandler
 
 public:
 	[[nodiscard]] static MySQLHandler* getHandler();
-	//[[nodiscard]] bool createConnection();
 
 	[[nodiscard]] int getUserID(std::string, std::string);
 	[[nodiscard]] struct User getUserInfo(Session*);
+	[[nodiscard]] std::string getAllUsers(int& count);
+	[[nodiscard]] std::string getAdmins(int& count);
+	[[nodiscard]] std::string getInstructors(int& count);
+	[[nodiscard]] std::string getStudents(int& count);
+	[[nodiscard]] std::string getGroups(int& count);
+	[[nodiscard]] std::string getCars(int& count);
+	[[nodiscard]] std::string getRooms(int& count);
 
 	void addUser(User newUser, std::string login, std::string password, 
 		std::string phone, std::string email, std::string pass);
@@ -32,6 +38,11 @@ struct User
 	std::string first_name;
 	std::string middle_name;
 	std::string last_name;
+	std::string login;
+	std::string phone_number;
+	std::string email;
+	std::string registration_date;
+	std::string pass_number;
 	std::string role;
 };
 
