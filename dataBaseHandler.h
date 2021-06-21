@@ -23,9 +23,13 @@ public:
 	[[nodiscard]] std::string getCars(int& count);
 	[[nodiscard]] std::string getRooms(int& count);
 
-	void addUser(User newUser, std::string login, std::string password, 
-		std::string phone, std::string email, std::string pass);
-	 
+	void addUser(User newUser);
+	void addStudent(User newUser, std::string group);
+	void addInstructor(User newUser, int salary);
+	void addCar(std::string model, std::string plate, int status);
+	void addRoom(int room);
+	void addGroup(std::string name);
+
 private:
 	static MySQLHandler *instance;
 	static std::mutex mutex_;
@@ -39,8 +43,10 @@ struct User
 	std::string middle_name;
 	std::string last_name;
 	std::string login;
+	std::string password;
 	std::string phone_number;
 	std::string email;
+	std::string phone;
 	std::string registration_date;
 	std::string pass_number;
 	std::string role;

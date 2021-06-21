@@ -29,11 +29,14 @@ public:
 	void handleGroupsRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
 	void handleCarsRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
 	void handleRoomsRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
+	void handleAddCarRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
+	void handleAddRoomRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
+	void handleAddGroupRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
 
 private:
 	[[nodiscard]] Poco::JSON::Object::Ptr parseObjectJson(std::string&);
 	[[nodiscard]] std::string getRequestString(Poco::Net::HTTPServerRequest&);
-	[[nodiscard]] bool CheckTokenAndRole(Poco::Net::HTTPServerRequest& req, std::string& jsonStr, std::string& role);
+	[[nodiscard]] bool CheckTokenAndRole(Poco::Net::HTTPServerRequest& req, std::string& jsonStr, std::string& role, Poco::JSON::Object::Ptr& ptr);
 };
 
 

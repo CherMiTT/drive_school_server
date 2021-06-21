@@ -14,32 +14,6 @@ MySQLHandler* MySQLHandler::getHandler()
     return instance;
 }
 
-
-/*bool MySQLHandler::createConnection()
-{
-	//register MySQL connector
-	Poco::Data::MySQL::Connector::registerConnector();
-
-    try
-    {
-        Poco::Data::Session s("MySQL", "host=localhost;port=3306;db=drive_school;user=root;password=qwerty;compress=true;auto-reconnect=true");
-        this->session = &s;
-        return true;
-    }
-    catch (Poco::Data::MySQL::MySQLException& e)
-    {
-        std::cout << "Error: " << e.displayText() << std::endl;
-        return false;
-    }
-    catch (Poco::Data::ConnectionFailedException& e)
-    {
-        std::cout << "Error: " << e.displayText() << std::endl;
-        return false;
-    }
-
-    return false;
-}*/
-
 int MySQLHandler::getUserID(std::string login, std::string password)
 {
     int id = -1;
@@ -366,18 +340,17 @@ std::string MySQLHandler::getAdmins(int& count)
     return result + "]";
 }
 
-void MySQLHandler::addUser(struct User newUser, std::string login, std::string password,
-                            std::string phone, std::string email, std::string pass)
+void MySQLHandler::addUser(struct User newUser)
 {
     Poco::Data::MySQL::Connector::registerConnector();
     Poco::Data::Session s("MySQL", "host=localhost;port=3306;db=drive_school;user=root;password=qwerty;compress=true;auto-reconnect=true");
     Poco::Data::Statement insert(s);
 
     insert << "INSERT INTO `drive_school`.`users`(`login`,`password_hash`,`first_name`,`middle_name`,`last_name`,`phone_number`,`email`,`pass_number`,`role`) VALUES(?,?,?,?,?,?,?,?,?);",
-        Poco::Data::Keywords::use(login), Poco::Data::Keywords::use(password),
+        Poco::Data::Keywords::use(newUser.login), Poco::Data::Keywords::use(newUser.password),
         Poco::Data::Keywords::use(newUser.first_name), Poco::Data::Keywords::use(newUser.middle_name),
-        Poco::Data::Keywords::use(newUser.last_name), Poco::Data::Keywords::use(phone),
-        Poco::Data::Keywords::use(email), Poco::Data::Keywords::use(pass),
+        Poco::Data::Keywords::use(newUser.last_name), Poco::Data::Keywords::use(newUser.phone),
+        Poco::Data::Keywords::use(newUser.email), Poco::Data::Keywords::use(newUser.pass_number),
         Poco::Data::Keywords::use(newUser.role);
     try
     {
@@ -389,4 +362,123 @@ void MySQLHandler::addUser(struct User newUser, std::string login, std::string p
     }
     s.close();
 
+}
+
+void MySQLHandler::addStudent(User newUser, std::string group)
+{
+    Poco::Data::MySQL::Connector::registerConnector();
+    Poco::Data::Session s("MySQL", "host=localhost;port=3306;db=drive_school;user=root;password=qwerty;compress=true;auto-reconnect=true");
+    Poco::Data::Statement selectStudentId(s);
+    Poco::Data::Statement selectGroupId(s);
+    Poco::Data::Statement insert(s);
+
+    int id;
+    int groupId;
+    selectStudentId << "SELECT id FROM users WHERE login = ?",
+        Poco::Data::Keywords::into(id),
+        Poco::Data::Keywords::use(newUser.login),
+        Poco::Data::Keywords::now;
+
+    selectGroupId << "SELECT id FROM study_groups WHERE group_name = ?",
+        Poco::Data::Keywords::into(groupId),
+        Poco::Data::Keywords::use(group),
+        Poco::Data::Keywords::now;
+
+    insert << "INSERT INTO `drive_school`.`students` (`users_id`, `groups_id`) VALUES(?,?);",
+        Poco::Data::Keywords::use(id), Poco::Data::Keywords::use(groupId);
+    try
+    {
+        insert.execute();
+    }
+    catch (const Poco::Exception& exc)
+    {
+        std::cout << "Exception while adding student:" << exc.displayText() << std::endl;
+    }
+    s.close();
+
+}
+
+void MySQLHandler::addInstructor(User newUser, int salary)
+{
+    Poco::Data::MySQL::Connector::registerConnector();
+    Poco::Data::Session s("MySQL", "host=localhost;port=3306;db=drive_school;user=root;password=qwerty;compress=true;auto-reconnect=true");
+    Poco::Data::Statement selectUserId(s);
+    Poco::Data::Statement insert(s);
+
+    int id;
+    selectUserId << "SELECT id FROM users WHERE login = ?",
+        Poco::Data::Keywords::into(id),
+        Poco::Data::Keywords::use(newUser.login),
+        Poco::Data::Keywords::now;
+
+    insert << "INSERT INTO instructors (users_id, salary) VALUES(?,?);",
+        Poco::Data::Keywords::use(id), Poco::Data::Keywords::use(salary);
+    try
+    {
+        insert.execute();
+    }
+    catch (const Poco::Exception& exc)
+    {
+        std::cout << "Exception while adding instructor:" << exc.displayText() << std::endl;
+    }
+    s.close();
+}
+
+void MySQLHandler::addCar(std::string model, std::string plate, int status)
+{
+    Poco::Data::MySQL::Connector::registerConnector();
+    Poco::Data::Session s("MySQL", "host=localhost;port=3306;db=drive_school;user=root;password=qwerty;compress=true;auto-reconnect=true");
+    Poco::Data::Statement insert(s);
+    
+    std::string stat = status == 0 ? "active" : "inactive";
+    insert << "INSERT INTO cars (model, plate, status) VALUES(?,?,?);",
+        Poco::Data::Keywords::use(model), Poco::Data::Keywords::use(plate),
+        Poco::Data::Keywords::use(stat);
+    try
+    {
+        insert.execute();
+    }
+    catch (const Poco::Exception& exc)
+    {
+        std::cout << "Exception while adding car:" << exc.displayText() << std::endl;
+    }
+    s.close();
+}
+
+void MySQLHandler::addRoom(int room)
+{
+    Poco::Data::MySQL::Connector::registerConnector();
+    Poco::Data::Session s("MySQL", "host=localhost;port=3306;db=drive_school;user=root;password=qwerty;compress=true;auto-reconnect=true");
+    Poco::Data::Statement insert(s);
+
+    insert << "INSERT INTO auditories (number) VALUES(?);",
+        Poco::Data::Keywords::use(room);
+    try
+    {
+        insert.execute();
+    }
+    catch (const Poco::Exception& exc)
+    {
+        std::cout << "Exception while adding room:" << exc.displayText() << std::endl;
+    }
+    s.close();
+}
+
+void MySQLHandler::addGroup(std::string name)
+{
+    Poco::Data::MySQL::Connector::registerConnector();
+    Poco::Data::Session s("MySQL", "host=localhost;port=3306;db=drive_school;user=root;password=qwerty;compress=true;auto-reconnect=true");
+    Poco::Data::Statement insert(s);
+
+    insert << "INSERT INTO study_groups (group_name) VALUES(?);",
+        Poco::Data::Keywords::use(name);
+    try
+    {
+        insert.execute();
+    }
+    catch (const Poco::Exception& exc)
+    {
+        std::cout << "Exception while adding group:" << exc.displayText() << std::endl;
+    }
+    s.close();
 }

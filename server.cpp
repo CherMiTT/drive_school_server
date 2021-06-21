@@ -4,7 +4,6 @@
 
 std::vector<Session*>* Server::vSessions = nullptr;
 
-
 int Server::main(const vector<string>&)
 {
 	Poco::Net::HTTPServer s(new RequestHandlerFactory, Poco::Net::ServerSocket(9090), new Poco::Net::HTTPServerParams);
