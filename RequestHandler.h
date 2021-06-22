@@ -32,6 +32,16 @@ public:
 	void handleAddCarRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
 	void handleAddRoomRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
 	void handleAddGroupRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
+	void handleAllLessonsRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
+	void handleAddLessonRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
+	void handleAllTestsRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
+	void handleAddTestRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
+	void handleDeleteUserRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
+	void handleDeleteGroupRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
+	void handleDeleteRoomRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
+	void handleDeleteCarRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
+	void handleDeleteLessonRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
+	void handleDeleteTestRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
 
 private:
 	[[nodiscard]] Poco::JSON::Object::Ptr parseObjectJson(std::string&);

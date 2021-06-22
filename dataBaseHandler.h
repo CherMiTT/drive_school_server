@@ -3,6 +3,9 @@
 #include "Poco/Data/Session.h"
 #include "Poco/Data/MySQL/Connector.h"
 #include "Poco/Data/MySQL/MySQLException.h"
+#include "Poco/StringTokenizer.h"
+#include "Poco/JSON/Object.h"
+#include "Poco/JSON/Parser.h"
 #include <mutex>
 #include "Session.h"
 
@@ -22,6 +25,8 @@ public:
 	[[nodiscard]] std::string getGroups(int& count);
 	[[nodiscard]] std::string getCars(int& count);
 	[[nodiscard]] std::string getRooms(int& count);
+	[[nodiscard]] std::string getAllLessons(int& count);
+	[[nodiscard]] std::string getAllTests(int& count);
 
 	void addUser(User newUser);
 	void addStudent(User newUser, std::string group);
@@ -29,6 +34,14 @@ public:
 	void addCar(std::string model, std::string plate, int status);
 	void addRoom(int room);
 	void addGroup(std::string name);
+	void addLesson(Poco::JSON::Object::Ptr ptr);
+	void addTest(Poco::JSON::Object::Ptr ptr, int author_id);
+	void deleteUser(std::string login);
+	void deleteGroup(int group);
+	void deleteRoom(int room);
+	void deleteCar(std::string login);
+	void deleteLesson(int id);
+	void deleteTest(int id);
 
 private:
 	static MySQLHandler *instance;
