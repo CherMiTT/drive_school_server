@@ -143,6 +143,26 @@ void RequestHandler::handleRequest(Poco::Net::HTTPServerRequest& req, Poco::Net:
         handleDeleteTestRequest(req, resp);
         return;
     }
+    if (req.getURI() == "/api/student/schedule")
+    {
+        handleStudentScheduleRequest(req, resp);
+        return;
+    }
+    if (req.getURI() == "/api/student/group")
+    {
+        handleStudentGroupRequest(req, resp);
+        return;
+    }  
+    if (req.getURI() == "/api/student/test-ids")
+    {
+        handleAllTestsRequest(req, resp);
+        return;
+    }
+    if (req.getURI() == "/api/student/test")
+    {
+        handleStudentTestRequest(req, resp);
+        return;
+    }
 }
 
 void RequestHandler::handleAuthorizationRequest(Poco::Net::HTTPServerRequest& req, Poco::Net::HTTPServerResponse& resp)
@@ -482,9 +502,23 @@ void RequestHandler::handleAllTestsRequest(Poco::Net::HTTPServerRequest& req, Po
         jsonStr = MySQLHandler::getHandler()->getAllTests(count);
         if(count == 0) jsonStr = "{ \"status\" : \"success\" }";
     }
+    if (role == "s" || role == "i")
+    {
+        int count;
+        jsonStr = MySQLHandler::getHandler()->getAllTests(count);
+        if (count == 0) jsonStr = "{ \"status\" : \"success\" }";
+    }
     std::cout << jsonStr << std::endl;
-    Poco::JSON::Parser parser;
-    Poco::Dynamic::Var result = parser.parse(jsonStr);
+    Poco::Dynamic::Var result;
+    try
+    {
+        Poco::JSON::Parser parser;
+        result = parser.parse(jsonStr);
+    }
+    catch (const Poco::Exception& exc)
+    {
+        std::cout << "Exception while parsing json:" << exc.name() << " : " << exc.displayText() << std::endl;
+    }
     ostream& out = resp.send();
     out << result.toString();
 }
@@ -615,6 +649,101 @@ void RequestHandler::handleDeleteTestRequest(Poco::Net::HTTPServerRequest& req, 
         int id = ptr->getValue<int>("id");
         MySQLHandler::getHandler()->deleteLesson(id);
         jsonStr = "{ \"status\" : \"success\" }";
+    }
+    std::cout << jsonStr << std::endl;
+    Poco::JSON::Parser parser;
+    Poco::Dynamic::Var result = parser.parse(jsonStr);
+    ostream& out = resp.send();
+    out << result.toString();
+}
+
+void RequestHandler::handleStudentGroupRequest(Poco::Net::HTTPServerRequest& req, Poco::Net::HTTPServerResponse& resp)
+{
+    Poco::JSON::Object::Ptr object = parseObjectJson(getRequestString(req));
+    std::string token = object->getValue<string>("token");
+    int id = -1;
+    std::string userInfo = "";
+    std::string jsonStr = "";
+    for (auto o : *(Server::vSessions))
+    {
+        if (o->token.compare(token) == 0)
+        {
+            id = o->id;
+            userInfo = o->userInfoJsonString;
+            break;
+        }
+    }
+    std::string role;
+    if (userInfo != "")
+    {
+        Poco::JSON::Parser parser;
+        Poco::Dynamic::Var info = parser.parse("{" + userInfo);
+        Poco::JSON::Object::Ptr infoJson = info.extract<Poco::JSON::Object::Ptr>();
+        role = infoJson->getValue<string>("role");
+    }
+    if (role == "s")
+    {
+        jsonStr = MySQLHandler::getHandler()->getStudentGroup(id);
+    }
+    std::cout << jsonStr << std::endl;
+    Poco::JSON::Parser parser;
+    Poco::Dynamic::Var result = parser.parse(jsonStr);
+    ostream& out = resp.send();
+    out << result.toString();
+}
+
+void RequestHandler::handleStudentTestRequest(Poco::Net::HTTPServerRequest& req, Poco::Net::HTTPServerResponse& resp)
+{
+    std::string jsonStr = "";
+    std::string role = "";
+    Poco::JSON::Object::Ptr ptr;
+    if (CheckTokenAndRole(req, jsonStr, role, ptr))
+    {
+        int count;
+        int id = ptr->getValue<int>("id");
+        jsonStr = MySQLHandler::getHandler()->getTest(id);
+    }
+    if (role == "s" || role == "i")
+    {
+        int id = ptr->getValue<int>("id");
+        jsonStr = MySQLHandler::getHandler()->getTest(id);
+    }
+    std::cout << jsonStr << std::endl;
+    Poco::JSON::Parser parser;
+    Poco::Dynamic::Var result = parser.parse(jsonStr);
+    ostream& out = resp.send();
+    out << result.toString();
+}
+
+void RequestHandler::handleStudentScheduleRequest(Poco::Net::HTTPServerRequest& req, Poco::Net::HTTPServerResponse& resp)
+{
+    Poco::JSON::Object::Ptr object = parseObjectJson(getRequestString(req));
+    std::string token = object->getValue<string>("token");
+    int id = -1;
+    std::string userInfo = "";
+    std::string jsonStr = "";
+    for (auto o : *(Server::vSessions))
+    {
+        if (o->token.compare(token) == 0)
+        {
+            id = o->id;
+            userInfo = o->userInfoJsonString;
+            break;
+        }
+    }
+    std::string role;
+    if (userInfo != "")
+    {
+        Poco::JSON::Parser parser;
+        Poco::Dynamic::Var info = parser.parse("{" + userInfo);
+        Poco::JSON::Object::Ptr infoJson = info.extract<Poco::JSON::Object::Ptr>();
+        role = infoJson->getValue<string>("role");
+    }
+    if (role != "a")
+    {
+        int count;
+        jsonStr = MySQLHandler::getHandler()->getStudentSchedule(id, count);
+        if (count == 0) jsonStr = "{ \"status\" : \"success\" }";
     }
     std::cout << jsonStr << std::endl;
     Poco::JSON::Parser parser;

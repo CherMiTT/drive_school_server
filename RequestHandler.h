@@ -42,6 +42,9 @@ public:
 	void handleDeleteCarRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
 	void handleDeleteLessonRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
 	void handleDeleteTestRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
+	void handleStudentScheduleRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
+	void handleStudentGroupRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
+	void handleStudentTestRequest(Poco::Net::HTTPServerRequest&, Poco::Net::HTTPServerResponse&);
 
 private:
 	[[nodiscard]] Poco::JSON::Object::Ptr parseObjectJson(std::string&);

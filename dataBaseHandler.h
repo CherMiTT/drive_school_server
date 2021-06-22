@@ -27,6 +27,9 @@ public:
 	[[nodiscard]] std::string getRooms(int& count);
 	[[nodiscard]] std::string getAllLessons(int& count);
 	[[nodiscard]] std::string getAllTests(int& count);
+	[[nodiscard]] std::string getStudentGroup(int id);
+	[[nodiscard]] std::string getStudentSchedule(int id, int& count);
+	[[nodiscard]] std::string getTest(int id);
 
 	void addUser(User newUser);
 	void addStudent(User newUser, std::string group);

@@ -391,6 +391,120 @@ std::string MySQLHandler::getAllTests(int& count)
     return result + "]";
 }
 
+std::string MySQLHandler::getStudentGroup(int id)
+{
+    Poco::Data::MySQL::Connector::registerConnector();
+    Poco::Data::Session s("MySQL", "host=localhost;port=3306;db=drive_school;user=root;password=qwerty;compress=true;auto-reconnect=true");
+    Poco::Data::Statement selectGroupId(s);
+    Poco::Data::Statement selectGroupName(s);
+
+    int group_id;
+    selectGroupId << "SELECT groups_id FROM students WHERE users_id = ?",
+        Poco::Data::Keywords::into(group_id),
+        Poco::Data::Keywords::use(id),
+        Poco::Data::Keywords::now;
+
+    std::string name;
+    selectGroupName << "SELECT group_name FROM study_groups WHERE id = ?",
+        Poco::Data::Keywords::into(name),
+        Poco::Data::Keywords::use(group_id),
+        Poco::Data::Keywords::now;
+
+    s.close();
+    return "{\"group\" : \"" + name + "\"}";
+}
+
+std::string MySQLHandler::getStudentSchedule(int id, int& count)
+{
+    Poco::Data::MySQL::Connector::registerConnector();
+    Poco::Data::Session s("MySQL", "host=localhost;port=3306;db=drive_school;user=root;password=qwerty;compress=true;auto-reconnect=true");
+    Poco::Data::Statement selectGroupId(s);
+    Poco::Data::Statement selectLessons(s);
+    std::string result = "[";
+
+    int group_id;
+    selectGroupId << "SELECT groups_id FROM students WHERE users_id = ?",
+        Poco::Data::Keywords::into(group_id),
+        Poco::Data::Keywords::use(id),
+        Poco::Data::Keywords::now;
+
+    std::vector<std::string> instructor_name;
+    std::vector<int> aud_number;
+    std::vector<Poco::DateTime> lesson_time;
+    std::vector<std::string> lesson_type_name;
+
+    count = 0;
+
+    selectLessons << "SELECT instructor_name, aud_number, lesson_time, lesson_type_name FROM lessons_view WHERE group_id = ?",
+        Poco::Data::Keywords::into(instructor_name),
+        Poco::Data::Keywords::into(aud_number),
+        Poco::Data::Keywords::into(lesson_time),
+        Poco::Data::Keywords::into(lesson_type_name),
+        Poco::Data::Keywords::use(group_id);
+
+    try
+    {
+        count = selectLessons.execute();
+    }
+    catch (const Poco::Exception& exc)
+    {
+        std::cout << "Exception while selecting lessons:" << exc.name() << " : " << exc.displayText() << "; count = " << count << std::endl;
+    }
+    s.close();
+
+    for (int i = 0; i < count; i++)
+    {
+        result += " {\"instructor\" : \"" + instructor_name[i] + "\", \"room\" : \"" +
+            std::to_string(aud_number[i]) + "\", \"type\" : \"" + lesson_type_name[i] + "\", \"time\" : \"" +
+            Poco::DateTimeFormatter::format(lesson_time[i], "%M:%H %d.%m.%Y") + "\"},";
+    }
+    if (count != 0) result.pop_back();
+    return result + "]";
+}
+
+std::string MySQLHandler::getTest(int id)
+{
+    Poco::Data::MySQL::Connector::registerConnector();
+    Poco::Data::Session s("MySQL", "host=localhost;port=3306;db=drive_school;user=root;password=qwerty;compress=true;auto-reconnect=true");
+    Poco::Data::Statement select(s);
+    std::string result = "";
+    std::string text;
+    std::string var1;
+    std::string var2;
+    std::string var3;
+    std::string var4;
+    int answer;
+    std::string comment;
+    std::string image;
+
+    select << "SELECT text, var1, var2, var3, var4, true_var_number, answer_comment, image FROM tests WHERE id = ?",
+        Poco::Data::Keywords::into(text),
+        Poco::Data::Keywords::into(var1),
+        Poco::Data::Keywords::into(var2),
+        Poco::Data::Keywords::into(var3),
+        Poco::Data::Keywords::into(var4),
+        Poco::Data::Keywords::into(answer),
+        Poco::Data::Keywords::into(comment),
+        Poco::Data::Keywords::into(image),
+        Poco::Data::Keywords::use(id);
+
+    try
+    {
+        select.execute();
+    }
+    catch (const Poco::Exception& exc)
+    {
+        std::cout << "Exception while selecting test:" << exc.name() << " : " << exc.displayText() << std::endl;
+    }
+    s.close();
+
+    result = " {\"text\" : \"" + text + "\", \"var1\" : \"" +
+            var1 + "\", \"var2\" : \"" + var2 + "\", \"var3\" : \"" +
+            var3 + "\", \"var4\" : \"" + var4 + "\", \"answer\" : \""
+            + std::to_string(answer) + "\", \"comment\" : \"" + comment + "\", \"image\" : \"" + image + "\"}";
+    return result;
+}
+
 std::string MySQLHandler::getAdmins(int& count)
 {
     Poco::Data::MySQL::Connector::registerConnector();
